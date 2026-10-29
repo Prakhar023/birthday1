@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy Birthday 🎂</title>
+<style>
+:root{--bg:#fff1f4;--bg2:#ffd9e4;--card:#ffffff;--text:#3b1f2b;--muted:#8a5a6b;--accent:#e0457b;--accent2:#ff8a5c;--shadow:rgba(224,69,123,.25);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1220;--bg2:#331735;--card:#3a2040;--text:#fbeaf1;--muted:#d3a5bb;--accent:#ff6b9d;--accent2:#ffa07a;--shadow:rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d1220;--bg2:#331735;--card:#3a2040;--text:#fbeaf1;--muted:#d3a5bb;--accent:#ff6b9d;--accent2:#ffa07a;--shadow:rgba(0,0,0,.4);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--text);font-family:Georgia,"Times New Roman",serif;overflow:hidden;position:relative}
+.hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.hearts span{position:absolute;bottom:-40px;opacity:.5;animation:rise linear infinite}
+@keyframes rise{to{transform:translateY(-110vh) rotate(25deg);opacity:0}}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px;z-index:1}
+.screen.active{display:flex;animation:fade .6s ease}
+@keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(2rem,9vw,3.4rem);margin:0;line-height:1.1}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+p{margin:0;max-width:30ch;font-size:1.1rem;line-height:1.5;color:var(--muted)}
+.big{font-size:4.5rem;animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px) scale(1.05)}}
+button,input{font:inherit}
+button{border:0;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));padding:14px 28px;border-radius:999px;font-size:1.05rem;box-shadow:0 8px 20px var(--shadow);transition:transform .15s}
+button:active{transform:scale(.96)}
+button.ghost{background:transparent;color:var(--muted);box-shadow:none;padding:10px 18px}
+button:disabled{opacity:.35;cursor:default}
+input{padding:12px 18px;border-radius:999px;border:2px solid var(--accent);background:var(--card);color:var(--text);text-align:center;width:min(280px,80vw);font-size:1rem}
+.card{background:var(--card);border-radius:28px;padding:32px 24px;width:min(360px,90vw);min-height:260px;box-shadow:0 14px 40px var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.card .n{font-size:.95rem;letter-spacing:.15em;color:var(--accent);text-transform:uppercase}
+.card .e{font-size:3rem}
+.card .t{font-size:1.25rem;line-height:1.4}
+.card.swap{animation:fade .45s ease}
+.row{display:flex;gap:10px;align-items:center}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:90vw}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.3;transition:.3s}
+.dots i.on{background:var(--accent);opacity:1;transform:scale(1.3)}
+.hint{font-size:.85rem;opacity:.8}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:5;width:100%;height:100%}
+</style>
+</head>
+<body>
+<div class="hearts" id="hearts"></div>
+<canvas id="c"></canvas>
+
+<section class="screen active" id="s0">
+  <div class="big">🎁</div>
+  <h1>Something<br><em>just for you</em></h1>
+  <div id="nameBox" style="display:none;flex-direction:column;gap:10px;align-items:center">
+    <p class="hint">Type her name first (then share the link with #Name on the end):</p>
+    <input id="nameIn" placeholder="Her name" maxlength="24" autocomplete="off">
+  </div>
+  <button id="open">Tap to open</button>
+</section>
+
+<section class="screen" id="s1">
+  <div class="big">🎂</div>
+  <h1>Happy Birthday,<br><em id="nm">love</em>!</h1>
+  <p>Today is all about you. I made you something small, but it comes from a very big place in my heart.</p>
+  <button id="go">21 reasons I love you →</button>
+</section>
+
+<section class="screen" id="s2">
+  <div class="card" id="card"></div>
+  <div class="dots" id="dots"></div>
+  <div class="row">
+    <button class="ghost" id="back">← Back</button>
+    <button id="next">Next →</button>
+  </div>
+</section>
+
+<section class="screen" id="s3">
+  <div class="big">💖</div>
+  <h1>That’s <em>21</em> reasons<br>and counting</h1>
+  <p>I could go on forever. Thank you for being you, and for letting me be part of your story. Happy Birthday, my love.</p>
+  <button id="boom">Celebrate 🎉</button>
+  <button class="ghost" id="again">Read them again</button>
+</section>
+
+<script>
+var reasons=[
+["😊","Your smile is the most perfect smile ever. It makes all my worries vanish instantly."],
+["👀","Your eyes have a depth that makes me want to just stare, so grateful that you chose me."],
+["👂","You always listen to me, and you genuinely do."],
+["🎮","You show interest in all my nerdy hobbies."],
+["🫶","You never let me feel alone or like I have to handle things on my own."],
+["💬","You always know exactly what to say, and suddenly everything feels so much easier."],
+["🤍","I adore everything about you, including your figure. Not in a pervy way, but in a “I want to hold you tight and never let you leave” way. To me you’re perfect, and I’m obsessed with you."],
+["💎","You’re always honest with me."],
+["🌟","You make me feel important without even trying."],
+["🧩","You accept my imperfections."],
+["🍯","You have the sweetest soul."],
+["🌸","You are the kindest person I know."],
+["🎨","Your creative mind never stops amazing me."],
+["🎯","Your choices. Everything you pick says something wonderful about you."],
+["🌿","You forgive me even when I mess up."],
+["🔓","I can be completely vulnerable with you."],
+["🧠","You remember the little things."],
+["🧸","You’re the comfort I crave every single day."],
+["🔥","Your stubbornness. Yes, really. I love it."],
+["💛","The way you care about your loved ones."],
+["🌠","You’re the perfect example of the person I aspire to be."]
+];
+var $=function(i){return document.getElementById(i)};
+var idx=0,nameVal="Yashuu";
+
+// floating hearts
+var H=$("hearts"),sy=["💗","💖","💕","🌸","✨"];
+for(var i=0;i<14;i++){var s=document.createElement("span");s.textContent=sy[i%sy.length];
+s.style.left=Math.random()*100+"%";s.style.fontSize=(14+Math.random()*20)+"px";
+s.style.animationDuration=(9+Math.random()*10)+"s";s.style.animationDelay=(-Math.random()*14)+"s";H.appendChild(s)}
+
+function show(id){document.querySelectorAll(".screen").forEach(function(e){e.classList.remove("active")});$(id).classList.add("active")}
+
+// confetti
+var cv=$("c"),cx=cv.getContext("2d"),P=[],run=false;
+function size(){cv.width=innerWidth;cv.height=innerHeight}size();addEventListener("resize",size);
+function boom(n){var cols=["#e0457b","#ff8a5c","#ffd166","#7bdff2","#b794f6","#ffffff"];
+for(var i=0;i<(n||120);i++)P.push({x:innerWidth/2,y:innerHeight*0.55,vx:(Math.random()-.5)*14,vy:-Math.random()*15-4,r:3+Math.random()*5,c:cols[i%cols.length],a:1,rot:Math.random()*6});
+if(!run){run=true;tick()}}
+function tick(){cx.clearRect(0,0,cv.width,cv.height);
+P=P.filter(function(p){return p.a>0.02&&p.y<cv.height+20});
+P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.a-=.008;p.rot+=.2;
+cx.globalAlpha=Math.max(p.a,0);cx.fillStyle=p.c;cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cx.restore()});
+if(P.length)requestAnimationFrame(tick);else run=false}
+
+// reasons
+var dots=$("dots");for(var d=0;d<reasons.length;d++)dots.appendChild(document.createElement("i"));
+function render(){var r=reasons[idx],c=$("card");
+c.className="card";void c.offsetWidth;c.className="card swap";
+c.innerHTML="";
+[["n","Reason "+(idx+1)+" of "+reasons.length],["e",r[0]],["t",r[1]]].forEach(function(x){var el=document.createElement("div");el.className=x[0];el.textContent=x[1];c.appendChild(el)});
+Array.prototype.forEach.call(dots.children,function(el,i){el.className=i===idx?"on":""});
+$("back").disabled=idx===0;
+$("next").textContent=idx===reasons.length-1?"Finish 💌":"Next →";
+if(idx>0)boom(25)}
+
+$("open").onclick=function(){
+  var v=nameVal||$("nameIn").value.replace(/[^A-Za-z\u00C0-\u024F ._~-]/g,"").trim();
+  if(v)nameVal=v;
+  $("nm").textContent=nameVal||"my love";
+  show("s1");boom(160)};
+$("go").onclick=function(){idx=0;show("s2");render()};
+$("next").onclick=function(){if(idx<reasons.length-1){idx++;render()}else{show("s3");boom(200)}};
+$("back").onclick=function(){if(idx>0){idx--;render()}};
+$("boom").onclick=function(){boom(220)};
+$("again").onclick=function(){idx=0;show("s2");render()};
+</script>
+</body>
+</html>
